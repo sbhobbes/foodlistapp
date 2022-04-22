@@ -59,6 +59,25 @@ def main():
                                 PERSON_ID INTEGER REFERENCES PEOPLE (PERSON_ID),
                                 DAY_DT DATE,
                                 DESCRIPTION VARCHAR(80),
+                                LOCATION INTEGER REFERENCES LOOKUPS (LOOKUP_ID),
+                                CREATED_BY INTEGER REFERENCES USERS (USER_ID),
+                                CREATED_DATE DATE,
+                                LAST_MODIFIED_BY INTEGER REFERENCES USERS (USER_ID),
+                                LAST_MODIFIED_DATE DATE
+                            );'''
+
+    createActivitiesTable = '''CREATE TABLE IF NOT EXISTS ACTIVITY_LOG (
+                                ACTIVITY_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+                                TABLE_NAME VARCHAR(20),
+                                RECORD_ID INTEGER,
+                                PREVIOUS_VALUE VARCHAR(80),
+                                NEW_VALUE VARCHAR(80),
+                                CHANGED_ON_DT DATETIME
+                            );'''
+
+    createLookupsTable = '''CREATE TABLE IF NOT EXISTS LOOKUPS (
+                                LOOKUP_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+                                DESCRIPTION VARCHAR(40),
                                 CREATED_BY INTEGER REFERENCES USERS (USER_ID),
                                 CREATED_DATE DATE,
                                 LAST_MODIFIED_BY INTEGER REFERENCES USERS (USER_ID),
@@ -121,8 +140,8 @@ def main():
                                 UPDATE
                                     ITEMS
                                 SET
-                                    CREATED_DATE = CURRENT_DATE,
-                                    LAST_MODIFIED_DATE = CURRENT_DATE;
+                                    CREATED_DATE = DATETIME(CURRENT_DATE),
+                                    LAST_MODIFIED_DATE = DATETIME(CURRENT_DATE);
                             END;'''
 
     personUpdateTrigger = '''CREATE TRIGGER IF NOT EXISTS PERSON_UPDATE
@@ -144,14 +163,15 @@ def main():
                                     UPDATE
                                         REACTIONS
                                     SET
-                                        CREATED_DATE = CURRENT_DATE,
-                                        LAST_MODIFIED_DATE = CURRENT_DATE'''
+                                        CREATED_DATE = DATETIME(CURRENT_DATE),
+                                        LAST_MODIFIED_DATE = DATETIME(CURRENT_DATE)'''
 
     createTriggerList = [personInsertTrigger, listHeaderInertTrigger, listLinesInsertTrigger,
                             itemInsertTrigger, personUpdateTrigger, reactionInsertTrigger]
 
     createTablesList = [createPeopleTable, createUsersTable, createListHeadersTable,
-                        createItemsTable, createListLinesTable, createReactionsTable]
+                        createItemsTable, createListLinesTable, createReactionsTable,
+                        createActivitiesTable, createLookupsTable]
 
     conn = None
 
