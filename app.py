@@ -56,18 +56,21 @@ class FoodTracker(toga.App):
             style = Pack(padding = 5)
         )
 
+        second_box = toga.Box(style = Pack(direction = COLUMN))
+
         main_box.add(firstNameBox)
         main_box.add(middleNameBox)
         main_box.add(lastNameBox)
         main_box.add(addUserButton)
-
+        
         self.main_window = toga.MainWindow(title=self.formal_name)
         self.main_window.content = main_box
+        #self.main_window.content = second_box
         self.main_window.show()
 
     def IssueQuery(self, widget):
-        
         InsertNewPerson(self.db, self.firstNameInput.value, self.middleNameInput.value, self.lastNameInput.value)
+
 
 
 def main():
