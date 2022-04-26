@@ -1,3 +1,4 @@
+from socket import create_connection
 import sqlite3
 from sqlite3 import Error
 
@@ -50,7 +51,7 @@ def InsertNewListHeader(db, listName, firstName, lastName):
 
 
 # List Lines table scripts
-def InsertNewListLine(db, header, item, date):
+def InsertNewListLine(db, header, itemID, date):
 
     # SQL to create a new List Line record
     sql = '''INSERT INTO
@@ -59,7 +60,7 @@ def InsertNewListLine(db, header, item, date):
                 (?, ?, ?);'''
 
     # Execute the SQL
-    list = (header, item, date)
+    list = (header, itemID, date)
     conn = CreateConnection(db)
     ExecuteQuery(conn, sql, list)
 
@@ -72,6 +73,8 @@ def InsertNewItem(db, description):
                 ITEMS (DESCRIPTION)
              VALUES
                 (?)'''
+
+    print(description)
     
     # Execute the SQL
     list = [(description)]
@@ -109,6 +112,191 @@ def InsertNewLookups(db, description):
     ExecuteQuery(conn, sql, list)
 
 
+def InsertNewListHeader(db, personID, description):
+    
+    # SQL to insert a new list header record
+    sql = '''INSERT INTO
+                LIST_HEADERS (DESCRIPTION, PERSON_ID)
+             VALUES
+                (?, ?);'''
+
+    list = [description, personID]
+    conn = CreateConnection(db)
+    ExecuteQuery(conn, sql, list)
+
+
+# Retrieve a list of full names from the people table
+def SelectPeople(db):
+    
+    # SQL to get list of people
+    sql = '''SELECT
+                PERSON_ID,
+                FULL_NAME
+             FROM
+                PEOPLE
+             ORDER BY
+                FULL_NAME ASC'''
+
+    conn = CreateConnection(db)
+    c = conn.cursor()
+    c.execute(sql)
+
+    peopleList = []
+    rows = c.fetchall()
+    for row in rows:
+        peopleList.append((row[0], row[1]))
+
+    conn.close()
+
+    return peopleList
+
+
+# Retrieve a list of items from the item table
+def SelectItems(db):
+
+    # SQL to get list of items
+    sql = '''SELECT 
+                ITEM_ID,
+                DESCRIPTION
+             FROM
+                ITEMS
+             ORDER BY
+                DESCRIPTION ASC'''
+
+    conn = CreateConnection(db)
+    c = conn.cursor()
+    c.execute(sql)
+
+    itemList = []
+    rows = c.fetchall()
+    for row in rows:
+        itemList.append((row[0], row[1]))
+
+    conn.close()
+
+    return itemList
+
+
+def SelectListHeaders(db):
+
+    # SQL to get list of list headers
+    sql = '''SELECT
+                HEADER_ID,
+                DESCRIPTION
+             FROM
+                LIST_HEADERS
+             ORDER BY
+                DESCRIPTION ASC;'''
+
+    conn = CreateConnection(db)
+    c = conn.cursor()
+    c.execute(sql)
+
+    listHeadersList = []
+    rows = c.fetchall()
+    for row in rows:
+        listHeadersList.append((row[0], row[1]))
+
+    conn.close()
+    
+    return listHeadersList
+
+
+def SelectHistory(db, fromDate, toDate):
+
+    # SQL to retrieve values from the history view
+    sql = '''SELECT
+                LL.DAY_DT,
+                I.DESCRIPTION
+             FROM
+                LIST_LINES LL,
+                ITEMS I
+             WHERE I.ITEM_ID = LL.ITEM_ID'''
+             #WHERE
+                #DATE(DAY_DT) BETWEEN %s AND %s;''' % (fromDate, toDate)
+    print(sql)
+
+    list = [fromDate, toDate]
+
+    conn = CreateConnection(db)
+    c = conn.cursor()
+    c.execute(sql)
+
+    historyView = []
+    rows = c.fetchall()
+    for row in rows:
+        historyView.append(row)
+    print(rows)
+    conn.close()
+
+    return historyView
+
+
+# 
+def SelectTableNames(db):
+    
+    # SQL to retrieve table names
+    sql = '''SELECT
+                TABLE_NAME
+             FROM
+                ALL_TABLES 
+             WHERE
+                NOT TABLE_NAME IN ('sqlite_sequence', 'ACTIVITY_LOG') 
+             ORDER BY 
+                TABLE_NAME ASC;'''
+
+    conn = CreateConnection(db)
+    c = conn.cursor()
+    c.execute(sql)
+
+    tableData = []
+    rows = c.fetchall()
+    for row in rows:
+        tableData.append(row)
+
+    conn.close()
+
+    return tableData
+
+
+def SelectEntireTable(db, tableName):
+    
+    # SQL to retrieve all data from the desired table
+    sql = '''SELECT
+                *
+             FROM
+                %s''' % (tableName)
+
+    conn = CreateConnection(db)
+    c = conn.cursor()
+    c.execute(sql)
+
+    tableData = []
+    rows = c.fetchall()
+    for row in rows:
+        tableData.append(row)
+
+    conn.close()
+
+    return tableData
+
+
+def DeleteFromTable(db, tableName, columnName, matchValue):
+
+    # SQL to delete a record from a table
+    sql = '''DELETE FROM
+                %s
+             WHERE
+                %s = %s;
+                ''' %(tableName, columnName, matchValue)
+
+    conn = CreateConnection(db)
+    c = conn.cursor()
+    c.execute(sql)
+    conn.commit()
+    conn.close()
+
+
 # Database connection and query execution logic
 def CreateConnection(db):
 
@@ -124,6 +312,7 @@ def CreateConnection(db):
     
     # Return the connection object to the calling function
     return conn
+
 
 # Execute a query against the database
 def ExecuteQuery(conn, sql, list):
